@@ -8,11 +8,11 @@ router.use(function timeLog(req, res, next) {
 });
 // define the home page route
 router.get('/', function(req, res) {
-  res.send('Birds home page');
+  res.send('OZW API route - homepage');
 });
 // define the about route
 router.get('/about', function(req, res) {
-  res.send('About birds');
+  res.send('OZW API route - about');
 });
 
 // Catch all other routes

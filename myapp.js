@@ -233,4 +233,4 @@ process.on('SIGINT', function(){
 
   console.log('All GPIO resources released\n')
   
-})
+});

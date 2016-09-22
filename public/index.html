@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Bootstrap requirement - Above 3 meta first before any other head content -->
+    <title>Raspberry Pi REST API server</title>
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
+  </head>
+  <body>
+    <H1>Raspberry Pi REST API server</H1>
+    <div id="gpio"></div>
+    <div class="container-fluid">
+      <table class="table table-hover">
+        <tbody>
+          <tr ng-repeat="switch in switches">
+            <td>
+              <h2>{{switch.name}}</h2>
+              <div class="btn-group" data-toggle="buttons-radio">
+                <button type="button" class="btn btn-success" ng-click="turnSwitchOn(switch.id)">On</button>
+                <button type="button" class="btn btn-danger" ng-click="turnSwitchOff(switch.id)">Off</button>
+              </div>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+    <!-- Script loading at end of body -->
+    <script src="http://code.jquery.com/jquery-latest.js"></script>
+    <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+
+  </body>
+</html>

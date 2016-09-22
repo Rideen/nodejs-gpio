@@ -12,14 +12,14 @@ var app = express();
 
 // Declare Misc
 var port = process.env.PORT || 8080;
-var rpitools = require('./rpitools');
+//var rpitools = require('./rpitools');
 
 // setup view and view engine
 //
 
 // setup static file directory and favicon
 app.use(express.static(path.join(__dirname, 'public')));
-app.use(favicon(path.join(__dirname, 'public', 'bulb2.png')));
+app.use(favicon(path.join(__dirname, 'public', 'bulb3.png')));
 
 app.use(logger('dev'));
 app.use(bodyParser.urlencoded({ extended: true }));
@@ -27,28 +27,22 @@ app.use(bodyParser.json());
 
 app.use('/', routes);
 
-//app.listen(port);
-//console.log('Listening on port %d', port);
-//console.log(validGPIO);  ////////
-
-
 // Start Server
 app.listen(port, function(){
+  console.log('Raspberry Pi REST API Server');
+  console.log('============================');
   console.log('\n'+'Listening on port %d', port);
 });
 
+/*
+function appshutdown(){
+  console.log('shutdown on myapp2');
+  process.exit(0);
+};
 
-//// Release GPIOs and free up resources
-//process.on('SIGINT', function(){
-  //console.log('\nReleasing resource from GPIO call');
-    //// Check if any GPIOs currently assigned
+process.stdin.resume();
 
-  //if (assignedGPIO.length !== 0){
-    //for (var i=0; i< assignedGPIO.length; i++){
-      //setpin[assignedGPIO[i]].unexport;
-    //}
-  //};
+process.on('SIGINT', appshutdown);
+process.on('SIGTERM', appshutdown);
 
-  //console.log('All GPIO resources released\n')
-  
-//})
+*/
