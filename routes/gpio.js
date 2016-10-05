@@ -3,124 +3,99 @@ var express = require('express');
 var router = express.Router();
 // =================
 
-var gpioHelper = require('./scripts/gpio-helper');
+var gpioHelper = require('./helpers/pigpio-helper');
+// var validGPIOs = gpioHelper.validGPIOs;
+var assignedGPIOs = gpioHelper.assignedGPIOs;
 
-// Validate parameters for GPIO route
-router.param('pin_no', function(req, res, next, pin_no){
+// Validate parameters for GPIO rouc
+router.param('gpio_no', function(req, res, next, gpio_no){
   // validate pin number received
-  // indexOf() returns -1 if not found
-  if (gpioHelper.validGPIOs.indexOf(parseInt(pin_no)) > -1) {
-    req.params.pin_no = parseInt(pin_no);
-    next();
+  gpio_no = parseInt(gpio_no);
+  
+  if (gpioHelper.isValidGPIOs(gpio_no)){
+      req.params.gpio_no = gpio_no;
+      // console.log('assignedGPIOs ='+assignedGPIOs);   // troubleshooting only
+      next();
   } else {
     console.log('++ Error: Invalid GPIO pin request\n');
     res.status(400).send({ 'error':'Invalid GPIO pin request' });
-  }
+  };
+});
+
+router.param('pwm_level', function(req, res, next, pwm_level){
+  // validate pwm level number received
+  pwm_level = parseInt(pwm_level);
+  
+  if (pwm_level>=0 && pwm_level<=255){
+    req.params.pwm_level = pwm_level;
+    next();
+  } else {
+    console.log('++ Error: Invalid PWM value request\n');
+    res.status(400).send({ 'error':'Invalid PWM value request'});
+  };
 });
 
 // Start routes
 //
 router.get('/', function(req, res){
-  // respond with all pin current value
-  // Check if any GPIOs currently assigned
-  if (gpioHelper.assignedGPIO.length === 0){
-    console.log('++ Error: GPIO pins not set\n');
-    res.status(400).send({ 'error':'GPIO pins not set' });
-    return;
-  } else {
-    // display pin and values already assigned
-    for (var i in gpioHelper.assignedGPIO){
-      
-      console.log(i);
-      res.send({'All Settings': i});
-    }
-  };
+  
+  // respond with all pin mode and value
+  var readAllGPIOs = gpioHelper.readAllGPIOs();
+  res.send(readAllGPIOs);
+  
+  // respond with all assigned GPIO - mode and level
+
+  
 });
 
 // Start API Routes
-router.get('/:pin_no', function(req, res){
-  var pin_no = req.params.pin_no;
-  // Check if any GPIOs currently assigned
-  /*if (assignedGPIO.length === 0){
-    console.log('++ Error: No GPIO pins assigned\n');
-    res.status(400).send({ 'error':'No GPIO pins assigned' });
-    return;
-  }*/
-  // Check if requested pin is currently assigned
-  if (gpioHelper.isAssignedGPIO(pin_no)){
-    // is found in assign list
-    setpin[pin_no].read(function(err, value){
-      if (err){
-        throw err;
-      }
-    });
-    res.send({ 'pin' : pin_no, 'value': value });
-    console.log('Responded: Pin:'+pin_no+' , value:'+value+'\n');
-  } else {  // not found
-    console.log('++ Error: Cannot read. GPIO pin '+pin_no+' not set\n');
-    res.status(400).send({ 'error':'Cannot read. GPIO pin '+pin_no+' not set' });
-  };
-  
-  /*gpio.open(pin, 'input', function(err){
-    gpio.read(pin, function(err, value){
-      res.send(200, {value: value});
-      gpio.close(pin);  
-    });
-  }); */
+router.get('/release', function(req, res){    // test release module
+  var json_data = gpioHelper.releaseGPIOs();
+  //console.log(json_data);
+  res.send(json_data);
 });
 
-/* router.put('/:pin_no', function(req, res){
+router.get('/PWM/:gpio_no/:pwm_level', function(req, res){
+  // GPIO PWM value set
+  console.log('Set PWM');
+  res.send(['PWM route']);
+});
 
-}); */
+router.get('/:gpio_no', function(req, res){
+  var gpio_no = req.params.gpio_no;
 
-router.post('/:pin_no', function(req, res){
+  var json_data = gpioHelper.readOneGPIO(gpio_no);
+  res.send(json_data);
 
-  var pin_no = req.params.pin_no;
+});
+
+router.get('/:gpio_no/ON', function(req, res){
+  // set GPIO on
+  var gpio_no = req.params.gpio_no;
+  var json_data = gpioHelper.setGPIOOn(gpio_no);
   
-  // Check if pin is already assigned
-  if (!gpioHelper.isAssignedGPIO(pin_no)){
-    // not assigned, initialise GPIO and add into assigned list
-    setpin[pin_no] = new Gpio(pin_no, 'out');
-    gpioHelper.storeAssignedGPIO(pin_no);
-  }
+  res.send(json_data);
+});
+
+router.get('/:gpio_no/OFF', function(req, res){
+  // set GPIO off
+  var gpio_no = req.params.gpio_no;
+  var json_data = gpioHelper.setGPIOOff(gpio_no);
   
-  var value = parseInt(req.body.value);
+  res.send(json_data);
+});
+
+router.get('/:gpio_no/TOGGLE', function(req, res){
+  // TOGGLE GPIO setting
+  var gpio_no = req.params.gpio_no;
+  var json_data = gpioHelper.toggleGPIO(gpio_no);
   
-  if ([0,1].indexOf(value) < 0) { // value not 0 or 1 - invalid
-    console.log('++ Error: Send ON(1) or OFF(0) only\n')
-    res.status(400).send({ 'error': 'Send ON(1) or OFF(0) only' });
-    setpin[pin_no].unexport;
-    gpioHelper.removeAssignedGPIO(pin_no);
-    return;
-  } else { // value is 0 or 1
-    // check if current value is same as requested value
-    if (value == setpin[pin_no].readSync()) {
-      //error - same
-      console.log('++ Error: Already at requested setting\n');
-      res.status(400).send({ 'error' : 'Already at requested setting' });
-      setpin[pin_no].unexport;
-      gpioHelper.removeAssignedGPIO(pin_no);
-    } else {
-      setpin[pin_no].writeSync(value);
-      res.send({ 'pin' : pin_no, 'value': value });
-      console.log('++ Responded: Pin:'+pin_no+' , value:'+value+'\n');
-    };
-  }
-      
-      /*
-      targetpin.write(value, function(err){  // asynchronous write
-        if (err){
-          throw err;
-        }
-        targetpin.unexport();
-        res.send({ 'pin' : pin_no, 'value': value });
-        console.log('++ Responded: Pin:'+pin_no+' , value:'+value+'\n');
-        });*/
+  res.send(json_data);
 });
 
 // Catch all other routes  
 router.get('*', function(req, res){
-  res.send('Invalid API route: '+req.method+' '+req.baseUrl);
+  res.send({ 'error': 'Invalid GPIO API route: '+req.method+' '+req.baseUrl });
 });
 
 // Close API Routes

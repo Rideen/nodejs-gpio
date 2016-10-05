@@ -41,9 +41,10 @@ var removeAssignedGPIO = exports.removeAssignedGPIO = function(gpio_no){
 };
 
 // Read all GPIOs
+/*
 var readAllGPIOs = exports.readAllGPIOs = function(){
   var allValues = [];
-  for (i=0; i< validGPIOs.length; i++){
+  for (var i=0; i< validGPIOs.length; i++){
     
     gpio_no = validGPIOs[i];  // loop thru all valid GPIOs
     gpio = new pigpio(gpio_no);
@@ -59,6 +60,30 @@ var readAllGPIOs = exports.readAllGPIOs = function(){
   console.log('++ GPIO values retrieved\n');
   return JSON.parse('{'+allValues+'}');
 };
+*/
+
+// Read all GPIOs
+var readAllGPIOs = exports.readAllGPIOs = function(){
+  if (assignedGPIOs.length == 0){
+    // no GPIOs assigned yet. Return nothing
+    console.log('++ No GPIOs assigned\n');
+    return JSON.parse('{ "status": "No GPIOs assigned. Available GPIOs: '+ validGPIOs +'" }');
+  };
+  
+  var allValues = [];
+  
+  for (var i=0; i < assignedGPIOs.length; i++){
+  
+    gpio_no = assignedGPIOs[i];
+    gpio = new pigpio(gpio_no);
+    
+    allValues.push('"'+gpio_no.toString()+'":{ '+
+      '"mode":'+gpio.getMode()+', '+
+      '"level":'+gpio.digitalRead()+' }');
+  }
+  console.log('++ GPIO values retrieved\n');
+  return JSON.parse('{'+allValues+'}');
+};
 
 
 var readOneGPIO = exports.readOneGPIO = function(gpio_no){
@@ -70,9 +95,9 @@ var readOneGPIO = exports.readOneGPIO = function(gpio_no){
     ' level=' + gpio.digitalRead()
   );
   
-  gpioValue = '"'+gpio_no.toString()+'"'+':{'+
-                  '"mode":'+gpio.getMode()+','+
-                  '"level":'+gpio.digitalRead()+'}';
+  gpioValue = '"'+gpio_no.toString()+'"'+' : {'+
+                  '"mode" : '+gpio.getMode()+','+
+                  '"level" : '+gpio.digitalRead()+'}';
 
   return JSON.parse('{'+gpioValue+'}');
 };
@@ -144,26 +169,35 @@ var toggleGPIO = exports.toggleGPIO = function(gpio_no){
 // Release GPIOs and free up resources
 var releaseGPIOs = exports.releaseGPIOs = function(){
   // Check if any GPIOs are currently assigned
-  console.log('++ Releasing GPIO resources\n')
-  if (assignedGPIOs.length !== 0){
+  if (assignedGPIOs.length == 0){
+    console.log('++ No GPIOs assigned\n');
+    return JSON.parse('{ "status" : "No GPIOs assigned" }');
+  };
   
-    for (i=0; i< assignedGPIOs.length; i++){
+  console.log('++ Releasing GPIO resources\n')
+  
+  for (var i=0; i< assignedGPIOs.length; i++){
       
-      gpio_no = assignedGPIOs[i];
+    gpio_no = assignedGPIOs[i];
       
-      gpio = new pigpio(gpio_no, {mode: pigpio.OUTPUT});
-      gpio.digitalWrite(0);
+    gpio = new pigpio(gpio_no, {
+      mode: pigpio.INPUT,
+      pullUpDown: pigpio.PUD_DOWN
+    });
+    // gpio.digitalWrite(0);
 
-      console.log('++ GPIO' + gpio_no + ':' +
+    console.log('++ GPIO' + gpio_no + ':' +
         ' mode=' + gpio.getMode() +
         ' level=' + gpio.digitalRead()
-      );
-    }
-  };
+    );
+  }
+  assignedGPIOs = [];
+  
   console.log('\n++ All GPIO resources released\n');
+  return JSON.parse('{ "status" : "All GPIO resources released" }');
 };
 
-
+/*
 function shutdownGPIO(){
   console.log("run shutdown");
   releaseGPIOs();
@@ -178,3 +212,4 @@ process.on('SIGINT', shutdownGPIO);
 process.on('SIGTERM', shutdownGPIO);
 process.on('SIGHUP', shutdownGPIO);
 process.on('SIGCONT', shutdownGPIO);
+*/

@@ -8,7 +8,7 @@ router.use(function(req, res, next){
 });
 
 // declare sub-routes here
-router.use('/gpio', require('./gpio2'));
+router.use('/gpio', require('./gpio'));
 router.use('/ozw', require('./ozw'));
 
 // routes in main file
