@@ -20,7 +20,7 @@ var isRpiBRev2 = exports.isRpiBRev2 = function(){
 }
   
 var validGPIOs = exports.validGPIOs = function(){
-  // valid GPIOs available on Rpi
+  // valid GPIOs available on Rpi (BCM pin numbering, 0 & 1 reserved)
   var valid26GPIO = [2,3,4,17,27,22,10,9,11,14,15,18,23,24,25,8,7];
   var valid40GPIO = valid26GPIO.concat([5,6,13,19,26,12,16,20,21]);
   
